@@ -36,17 +36,17 @@ class CentralWidget(object):
         )
 
         self.left_menu.button_toggle_left_column.clicked.connect(
-            lambda: self.toogle_block(self.frame_content.right_column, 0, 0)
+            lambda: self.toogle_block(self.frame_content.content.right_column, 0, 0)
         )
         self.left_menu.button_toggle_left_column.clicked.connect(
             lambda: self.toogle_block(self.frame_content.left_column, 0)
         )
 
-        self.frame_content.content.top_bar.button_toggle_right_column.clicked.connect(
+        self.frame_content.top_bar.button_toggle_right_column.clicked.connect(
             lambda: self.toogle_block(self.frame_content.left_column, 0, 0)
         )
-        self.frame_content.content.top_bar.button_toggle_right_column.clicked.connect(
-            lambda: self.toogle_block(self.frame_content.right_column, 0, 300)
+        self.frame_content.top_bar.button_toggle_right_column.clicked.connect(
+            lambda: self.toogle_block(self.frame_content.content.right_column, 0, 300)
         )
 
     @staticmethod

@@ -1,7 +1,9 @@
 import qt_core as qt
+from gui.widgets.bottom_bar import BottomBar
 from gui.widgets.content import Content
 from gui.widgets.left_column import LeftColumn
 from gui.widgets.right_column import RightColumn
+from gui.widgets.top_bar import TopBar
 
 
 class FrameContent(qt.QFrame):
@@ -12,12 +14,23 @@ class FrameContent(qt.QFrame):
         self.layout.setSpacing(0)
 
         self.left_column = LeftColumn(theme)
+
+        self.subframe = qt.QFrame()
+        self.subframe_layout = qt.QVBoxLayout(self.subframe)
+        self.subframe_layout.setContentsMargins(0, 0, 0, 0)
+        self.subframe_layout.setSpacing(0)
+
+        self.top_bar = TopBar(theme)
         self.content = Content(theme)
-        self.right_column = RightColumn(theme)
+        self.bottom_bar = BottomBar(theme)
+
 
         self.add_layout()
 
     def add_layout(self):
         self.layout.addWidget(self.left_column)
-        self.layout.addWidget(self.content)
-        self.layout.addWidget(self.right_column)
+        self.layout.addWidget(self.subframe)
+
+        self.subframe_layout.addWidget(self.top_bar)
+        self.subframe_layout.addWidget(self.content)
+        self.subframe_layout.addWidget(self.bottom_bar)

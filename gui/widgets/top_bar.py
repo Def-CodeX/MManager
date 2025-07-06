@@ -7,8 +7,8 @@ class TopBar(qt.QFrame):
 
         bg_color = theme['colors'].get('bar')
 
-        self.setMinimumHeight(20)
-        self.setMaximumHeight(20)
+        self.setMinimumHeight(25)
+        self.setMaximumHeight(25)
         self.setStyleSheet(f"background-color: {bg_color};")
 
         self.layout = qt.QHBoxLayout(self)
