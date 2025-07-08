@@ -1,4 +1,5 @@
 import qt_core as qt
+from gui.widgets.ui_button import UiButton
 
 
 class TopBar(qt.QFrame):
@@ -18,7 +19,15 @@ class TopBar(qt.QFrame):
 
         self.spacer = qt.QSpacerItem(0, 0, qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Minimum)
 
-        self.button_toggle_right_column = qt.QPushButton("Right")
+        self.button_toggle_right_column = UiButton(
+            theme,
+            tooltip="Settings",
+            icon_path="settings.svg",
+            icon_bg=theme['colors'].get('bar'),
+            margin=0,
+            icon_size=18,
+            height=25
+        )
 
         self.add_layout()
 

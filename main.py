@@ -1,6 +1,5 @@
 import sys
 import qt_core as qt
-import json
 from gui.central_widget import CentralWidget
 
 
