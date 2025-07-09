@@ -11,6 +11,7 @@ class UiButton(qt.QPushButton):
             tooltip="",
             icon_path="",
             icon_bg="",
+            icon_color="",
             icon_size=24,
             spacing=16,
             margin=16,
@@ -23,14 +24,17 @@ class UiButton(qt.QPushButton):
 
         self.icon_path = os.path.normpath(path)
         self.is_active = is_active
+        self.tooltip = tooltip
         self.spacing = spacing
         self.margin = margin
         self.icon_bg = icon_bg
+        self.icon_color = icon_color
         self.theme = theme
 
         if text:
             self.setText("   " + text)
-        self.setToolTip(f"<h2><b>{tooltip}</b></h2>")
+        if tooltip:
+            self.setToolTip(f"<h2><b>{tooltip}</b></h2>")
         self.setMinimumHeight(height)
         self.setMinimumWidth(width)
         self.setCursor(qt.Qt.CursorShape.PointingHandCursor)
@@ -56,7 +60,7 @@ class UiButton(qt.QPushButton):
         painter = qt.QPainter(colored)
         painter.drawPixmap(0, 0, pixmap)
         painter.setCompositionMode(qt.QPainter.CompositionMode.CompositionMode_SourceIn)
-        painter.fillRect(pixmap.rect(), qt.QColor(self.theme['colors'].get('text_primary')))
+        painter.fillRect(pixmap.rect(), qt.QColor(self.icon_color or self.theme['colors'].get('text_primary')))
         painter.end()
 
         self.setIcon(qt.QIcon(colored))
@@ -72,20 +76,25 @@ class UiButton(qt.QPushButton):
                 text-align: left;
             }}
             QPushButton:hover {{
+                color: {self.theme['colors'].get('black')};
                 background-color: {self.theme['colors'].get('primary')};
             }}
             QPushButton:pressed {{
                 background-color: {self.theme['colors'].get('highlight')};
-            }}
-            QToolTip {{
-                background-color: #333333;
-                color: white;
-                border: 1px solid #555555;
-                padding: 5px;
-                border-radius: 3px;
-                font-size: 12px;
-            }}
+            }}            
         """
+
+        if self.tooltip:
+            base += """
+                QToolTip {
+                    background-color: #333333;
+                    color: white;
+                    border: 1px solid #555555;
+                    padding: 5px;
+                    border-radius: 3px;
+                    font-size: 12px;
+                }
+            """
 
         if self.is_active:
             base += f"""

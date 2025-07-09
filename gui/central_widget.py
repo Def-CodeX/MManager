@@ -7,7 +7,7 @@ from gui.widgets.left_menu import LeftMenu
 class CentralWidget(object):
     def __init__(self, parent: qt.QMainWindow):
         super().__init__()
-        parent.setWindowTitle('DefCodex')
+        parent.setWindowTitle('MManager')
         parent.setMinimumSize(qt.QSize(1120, 630))
         parent.setWindowIcon(qt.QIcon('iconn.ico'))
 
@@ -24,6 +24,7 @@ class CentralWidget(object):
 
         self.add_layout()
         self.setup_collapse()
+        self.toogle_pages()
         parent.setCentralWidget(self.central_widget)
 
     def add_layout(self):
@@ -65,3 +66,36 @@ class CentralWidget(object):
             target.animation.setDuration(500)
             target.animation.setEasingCurve(qt.QEasingCurve.Type.InOutCirc)
             target.animation.start()
+
+    @qt.Slot(qt.QStackedWidget)
+    def toogle_pages(self):
+        pages = self.frame_content.content.pages
+        set_current = self.frame_content.content.pages.setCurrentWidget
+
+        self.frame_content.top_bar.button_close.clicked.connect(
+            lambda : set_current(pages.none_page)
+        )
+
+        self.left_menu.button_home.clicked.connect(
+            lambda : set_current(pages.home_page)
+        )
+
+        self.left_menu.button_command.clicked.connect(
+            lambda : set_current(pages.command_page)
+        )
+
+        self.left_menu.button_build.clicked.connect(
+            lambda : set_current(pages.build_page)
+        )
+
+        self.left_menu.button_obfuscate.clicked.connect(
+            lambda : set_current(pages.obfuscate_page)
+        )
+
+        self.left_menu.button_source.clicked.connect(
+            lambda : set_current(pages.source_page)
+        )
+
+        self.left_menu.button_logs.clicked.connect(
+            lambda : set_current(pages.logs_page)
+        )

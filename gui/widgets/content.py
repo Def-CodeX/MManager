@@ -1,4 +1,5 @@
 import qt_core as qt
+from gui.pages.main_pages import MainPages
 from gui.widgets.right_column import RightColumn
 
 
@@ -12,7 +13,7 @@ class Content(qt.QFrame):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
-        self.pages = qt.QStackedWidget()
+        self.pages = MainPages(theme)
         self.right_column = RightColumn(theme)
 
         self.add_layout()

@@ -16,6 +16,16 @@ class TopBar(qt.QFrame):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
+        self.button_close = UiButton(
+            theme,
+            text="MManager",
+            tooltip="Close",
+            icon_path="shield-plus.svg",
+            icon_bg=theme['colors'].get('bar'),
+            margin=0,
+            icon_size=18,
+            height=25
+        )
 
         self.spacer = qt.QSpacerItem(0, 0, qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Minimum)
 
@@ -32,5 +42,6 @@ class TopBar(qt.QFrame):
         self.add_layout()
 
     def add_layout(self):
+        self.layout.addWidget(self.button_close)
         self.layout.addSpacerItem(self.spacer)
         self.layout.addWidget(self.button_toggle_right_column)
