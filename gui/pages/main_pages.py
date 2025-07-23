@@ -9,8 +9,8 @@ from gui.pages.source_page import SourcePage
 
 class MainPages(qt.QStackedWidget):
     class NonePage(qt.QWidget):
-        def __init__(self):
-            super().__init__()
+        def __init__(self, parent = None):
+            super().__init__(parent)
             self.setObjectName("none_pg")
 
             self.layout = qt.QVBoxLayout(self)
@@ -23,17 +23,17 @@ class MainPages(qt.QStackedWidget):
 
             self.layout.addWidget(self.label)
 
-    def __init__(self, theme):
-        super().__init__()
+    def __init__(self, theme, parent):
+        super().__init__(parent)
         self.theme = theme
 
-        self.none_page = self.NonePage()
-        self.home_page = HomePage()
-        self.command_page = CommandPage()
-        self.build_page = BuildPage()
-        self.obfuscate_page = ObfuscatePage()
-        self.source_page = SourcePage()
-        self.logs_page = LogsPage()
+        self.none_page = self.NonePage(self)
+        self.home_page = HomePage(self)
+        self.command_page = CommandPage(self)
+        self.build_page = BuildPage(self)
+        self.obfuscate_page = ObfuscatePage(self)
+        self.source_page = SourcePage(self)
+        self.logs_page = LogsPage(self)
 
         self.add_widgets()
 

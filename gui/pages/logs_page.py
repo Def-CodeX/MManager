@@ -2,8 +2,8 @@ import qt_core as qt
 
 
 class LogsPage(qt.QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         if not self.objectName():
             self.setObjectName("LogsPage")
 
