@@ -1,9 +1,11 @@
 import sys
 import qt_core as qt
 from gui.central_widget import CentralWidget
+from core import Func
+from core.logger import Logger
 
 
-class MainWindow(qt.QMainWindow):
+class MainWindow(qt.QMainWindow, Func):
     def __init__(self):
         super().__init__()
 

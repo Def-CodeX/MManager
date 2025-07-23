@@ -9,11 +9,15 @@ class Settings:
         except FileNotFoundError:
             settings = {
                 "theme": {
-                    "name": "",
-                    "colors": dict(),
-                    "font": dict(),
-                    "icons": dict()
+                    "DefCodeX Dark": {
+                        "colors": dict(),
+                        "font": dict(),
+                        "icons": dict()
+                    }
                 }
             }
 
         self.theme = settings.get('theme')
+
+    def get_theme(self, theme_name: str = "DefCodeX Dark"):
+        return self.theme.get(theme_name)
