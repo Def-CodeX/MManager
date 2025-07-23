@@ -1,5 +1,5 @@
 import qt_core as qt
-from gui.widgets.ui_button import UiButton
+from gui.widgets.ui_push_button import UiPushButton
 
 
 class TopBar(qt.QFrame):
@@ -16,7 +16,7 @@ class TopBar(qt.QFrame):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
-        self.button_close = UiButton(
+        self.button_close = UiPushButton(
             theme,
             text="MManager",
             tooltip="Close",
@@ -29,7 +29,7 @@ class TopBar(qt.QFrame):
 
         self.spacer = qt.QSpacerItem(0, 0, qt.QSizePolicy.Policy.Expanding, qt.QSizePolicy.Policy.Minimum)
 
-        self.button_toggle_right_column = UiButton(
+        self.button_toggle_right_column = UiPushButton(
             theme,
             tooltip="Settings",
             icon_path="settings.svg",

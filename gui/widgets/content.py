@@ -13,8 +13,8 @@ class Content(qt.QFrame):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
-        self.pages = MainPages(theme)
-        self.right_column = RightColumn(theme)
+        self.pages = MainPages(theme, self)
+        self.right_column = RightColumn(theme, self)
 
         self.add_layout()
 

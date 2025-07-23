@@ -1,5 +1,5 @@
 import qt_core as qt
-from gui.widgets.ui_button import UiButton
+from gui.widgets.ui_push_button import UiPushButton
 
 
 class LeftMenu(qt.QFrame):
@@ -23,20 +23,20 @@ class LeftMenu(qt.QFrame):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
 
-        self.button_toggle_menu = UiButton(theme, text="Menu", icon_path="icon-menu.svg", margin=0)
+        self.button_toggle_menu = UiPushButton(theme, text="Menu", icon_path="icon-menu.svg", margin=0)
         self.line1 = self.Line()
 
-        self.button_home = UiButton(theme, text="Home", icon_path="home.svg")
-        self.button_command = UiButton(theme, text="Command", icon_path="pulse.svg")
-        self.button_build = UiButton(theme, text="Build", icon_path="tools.svg")
-        self.button_obfuscate = UiButton(theme, text="Obfuscate", icon_path="key.svg")
-        self.button_source = UiButton(theme, text="Source", icon_path="file-edit.svg")
-        self.button_logs = UiButton(theme, text="Logs", icon_path="time-past.svg")
+        self.button_home = UiPushButton(theme, text="Home", icon_path="home.svg")
+        self.button_command = UiPushButton(theme, text="Command", icon_path="pulse.svg")
+        self.button_build = UiPushButton(theme, text="Build", icon_path="tools.svg")
+        self.button_obfuscate = UiPushButton(theme, text="Obfuscate", icon_path="key.svg")
+        self.button_source = UiPushButton(theme, text="Source", icon_path="file-edit.svg")
+        self.button_logs = UiPushButton(theme, text="Logs", icon_path="time-past.svg")
         
         self.spacer = qt.QSpacerItem(0, 0, qt.QSizePolicy.Policy.Minimum, qt.QSizePolicy.Policy.Expanding)
 
         self.line2 = self.Line()
-        self.button_toggle_left_column = UiButton(theme, text="Info", icon_path="comment-info.svg", margin=0)
+        self.button_toggle_left_column = UiPushButton(theme, text="Info", icon_path="comment-info.svg", margin=0)
 
         self.add_layout()
 
