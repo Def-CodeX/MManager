@@ -2,7 +2,7 @@ import qt_core as qt
 import os
 
 
-class UiButton(qt.QPushButton):
+class UiPushButton(qt.QPushButton):
     def __init__(
             self,
             theme,
