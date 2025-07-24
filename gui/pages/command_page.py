@@ -2,10 +2,12 @@ import qt_core as qt
 
 
 class CommandPage(qt.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, theme, parent=None):
         super().__init__(parent)
         if not self.objectName():
             self.setObjectName("CommandPage")
+
+        self.theme = theme
 
         self.layout = qt.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
