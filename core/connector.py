@@ -10,11 +10,11 @@ class Connector(qt.QObject):
     message_received = qt.Signal(str)
 
     # sinais estruturados:
+    connection_list = qt.Signal(str, str, int, str, str)
     port_added = qt.Signal(str, str, int, str)
     port_removed = qt.Signal(str)
     target_connected = qt.Signal(str, str, str)
     target_disconnected = qt.Signal(str, str)
-    connection_list = qt.Signal(list)
 
     def __init__(self):
         super().__init__()
@@ -33,6 +33,7 @@ class Connector(qt.QObject):
                         ],
                         "addr": (ip, port),
                         "status": status,
+                        "target": target_ip
                     },                    
                 }
             }
@@ -139,10 +140,11 @@ class Connector(qt.QObject):
     #     self.send(f"SEND {target_id} {data}")
 
     # =============================
-    # Parser das mensagens do proxy
+    # Parser Proxy
     # =============================
 
     def _parse_message(self, message: str):
+        self.logger.debug(f"Parsing message: {message}")
         if message.startswith("[PORT_ADDED]"):
             _, conn_id, host, port, status = message.split()
             self.port_added.emit(conn_id, host, int(port), status)
@@ -161,15 +163,10 @@ class Connector(qt.QObject):
 
         elif message.startswith("[CONNECTION]"):
             parts = message.split()
-            if len(parts) != 5:
+            if len(parts) != 6:
                 return
-            _, conn_id, host, port, status = parts
-            info = {
-                "id": conn_id,
-                "host": host,
-                "port": int(port),
-                "status": status,
-            }
-            self.connection_list.emit([info])
+            _, conn_id, host, port, status, target = parts
+            self.connection_list.emit(conn_id, host, int(port), status, target)
+
         else:
             self.message_received.emit(message)

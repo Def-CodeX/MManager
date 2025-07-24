@@ -41,7 +41,8 @@ class Proxy:
                 self.logger.info("Closing main server socket")
                 self.server_conn.close()
 
-            self.controller_thread.join()
+            if self.controller_thread:
+                self.controller_thread.join()
 
             for conn_id, meta in self.connections.items():
                 self.logger.info(f"Shutting down listener {conn_id}")
@@ -54,8 +55,11 @@ class Proxy:
                 if meta["thread"]:
                     meta["thread"].join()
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error(f"Failed to stop proxy: {e}")
+            return False
+
         self.logger.info("Proxy stoped")
+        return True
 
     def status(self):
         msg = f"Running: {not self.main_stop_event.is_set()}"
@@ -142,7 +146,7 @@ class Proxy:
         try:
             if self.controller_conn:
                 self.logger.debug(msg)
-                self.controller_conn.sendall(msg.encode(errors='ignore'))
+                self.controller_conn.sendall(f"{msg}\n".encode(errors='ignore'))
         except Exception as e:
             self.logger.warning(e)
 
@@ -172,6 +176,7 @@ class Proxy:
             "event": stop_event,
             "data": data_messages or [],
             "addr": (host, port),
+            "target": "",
             "status": "Listening"
         }
         def accept_client(server):
@@ -179,17 +184,20 @@ class Proxy:
             try:
                 client, addr = server.accept()
                 self.connections[conn_id]["socket"] = client
+                self.connections[conn_id]["status"] = "Connected"
+                self.connections[conn_id]["target"] = addr[0]
                 self._send_to_controller(f"[TARGET_CONNECTED] {conn_id} {addr[0]} Connected")
                 self.logger.info(f"Target connected from {addr} (conn_id={conn_id})")
                 while not (self.main_stop_event.is_set() or stop_event.is_set()):
                     try:
                         data = client.recv(4096)
                         if not data:
-                            self.connections[conn_id]['status'] = 'Disconnected'
+                            self.connections[conn_id]['status'] = "Disconnected"
+                            self.connections[conn_id]['target'] = ""
                             self._send_to_controller(f"[TARGET_DISCONNECTED] {conn_id} Disconnected")
                             self.logger.warning(f"Target disconnected (conn_id={conn_id})")
                             break
-                        self.connections[conn_id]['data'].append(data)
+                        self.connections[conn_id]['data'].append(data.decode(errors='ignore'))
                         self._send_to_controller(f"{conn_id} {data}")
 
                     except Exception as e:
@@ -201,7 +209,8 @@ class Proxy:
             finally:
                 if client:
                     client.close()
-                self.connections[conn_id]['status'] = 'Listening'
+                self.connections[conn_id]['status'] = "Listening"
+                self.connections[conn_id]['target'] = ""
                 self._send_to_controller(f"[TARGET_DISCONNECTED] {conn_id} Listening")
                 self.logger.debug(f"Listening again (conn_id={conn_id})")
 
@@ -261,15 +270,25 @@ class Proxy:
             _, listener_id = command.split()
             self._remove_listener(listener_id)
 
-    #     elif command.startswith("LIST"):
-    #         for conn_id, meta in self.targets.items():
-    #             ip = meta['addr'][0]
-    #             self._send_to_controller(f"[CONNECTION] {conn_id} {ip} Connected")
-    #
-    #         for listener_id, meta in self.listeners.items():
-    #             self._send_to_controller(
-    #                 f"[LISTENER] {listener_id} {meta['host']} {meta['port']} Listening"
-    #             )
+        elif command.startswith("LIST"):
+            self.save_connections()
+            print(self.connections)
+            for conn_id, meta in self.connections.items():
+                host = meta['addr'][0]
+                port = meta['addr'][1]
+                status = meta['status']
+                target = meta['target']
+                self._send_to_controller(f"[CONNECTION] {conn_id} {host} {port} {status} ({target})")
+
+    #     elif command.startswith("SEND"):
+    #         _, conn_id, msg = command.split(" ", 2)
+    #         if conn_id in self.targets:
+    #             try:
+    #                 self.targets[conn_id]['socket'].sendall(msg.encode())
+    #             except:
+    #                 self._send_to_controller(f"[x] Falha ao enviar para {conn_id}")
+    #         else:
+    #             self._send_to_controller(f"[x] Target {conn_id} não encontrado")
 
         else:
             self.logger.warning(f"Unknown command received: {command}")
@@ -283,15 +302,6 @@ class Proxy:
     #             except:
     #                 pass
     #
-    #     elif command.startswith("SEND"):
-    #         _, conn_id, msg = command.split(" ", 2)
-    #         if conn_id in self.targets:
-    #             try:
-    #                 self.targets[conn_id]['socket'].sendall(msg.encode())
-    #             except:
-    #                 self._send_to_controller(f"[x] Falha ao enviar para {conn_id}")
-    #         else:
-    #             self._send_to_controller(f"[x] Target {conn_id} não encontrado")
 
 
 if __name__ == '__main__':

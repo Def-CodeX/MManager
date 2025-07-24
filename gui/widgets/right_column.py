@@ -1,6 +1,7 @@
 import qt_core as qt
 from core import Func
 from gui.widgets.form_input import FormInput
+from gui.widgets.ui_push_button import UiPushButton
 from gui.widgets.ui_toggle_button import UiToggleButton
 
 
@@ -41,8 +42,15 @@ class RightColumn(qt.QFrame):
         self.button_proxy = UiToggleButton(theme, parent=self)
         self.button_proxy.stateChanged.connect(self.proxy_start_stop)
 
-        self.button_connect = qt.QPushButton("Connect", parent=self)
-        self.button_connect.setCursor(qt.Qt.CursorShape.PointingHandCursor)
+        self.button_connect = UiPushButton(
+            theme,
+            text="Connect",
+            icon_path="signal-stream.svg",
+            margin=0,
+            icon_size=18,
+            height=25,
+            width=50
+        )
         self.button_connect.clicked.connect(self.connect_proxy)
 
         self.proxy_on_input = FormInput(
@@ -57,11 +65,18 @@ class RightColumn(qt.QFrame):
         # Proxies connected
         self.proxy_hosts_combo = qt.QComboBox(self)
         self.proxy_hosts_combo.setPlaceholderText("Proxy Host")
-        self.proxy_hosts_combo.setMinimumWidth(200)
+        self.proxy_hosts_combo.setMinimumWidth(150)
         self.proxy_hosts_combo.setStyleSheet(f"background-color: {theme['colors'].get('background')}; ")
 
-        self.button_disconnect = qt.QPushButton("Disconnect", parent=self)
-        self.button_disconnect.setCursor(qt.Qt.CursorShape.PointingHandCursor)
+        self.button_disconnect = UiPushButton(
+            theme,
+            text="Disconnect",
+            icon_path="signal-stream-slash.svg",
+            margin=0,
+            icon_size=18,
+            height=25,
+            width=50
+        )
         self.button_disconnect.clicked.connect(self.disconnect_proxy)
 
         self.proxy_off_input = FormInput(

@@ -12,7 +12,7 @@ class CentralWidget(object):
         self.font = qt.QFont(self.theme['font'].get('family'), self.theme['font'].get('size'))
 
         parent.setWindowTitle('MManager')
-        parent.setMinimumSize(qt.QSize(1370, 800))
+        parent.setMinimumSize(qt.QSize(1450, 800))
         parent.setWindowIcon(qt.QIcon('iconn.ico'))
 
         self.central_widget = qt.QFrame(parent)

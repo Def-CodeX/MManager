@@ -17,6 +17,7 @@ class UiPushButton(qt.QPushButton):
             margin=16,
             width=60,
             height=60,
+            gap=0,
             is_active=False
     ):
         super().__init__(parent)
@@ -27,6 +28,7 @@ class UiPushButton(qt.QPushButton):
         self.tooltip = tooltip
         self.spacing = spacing
         self.margin = margin
+        self.gap = gap
         self.icon_bg = icon_bg
         self.icon_color = icon_color
         self.theme = theme
@@ -73,7 +75,11 @@ class UiPushButton(qt.QPushButton):
                 border: none;
                 padding: 0 {self.spacing}px;
                 margin-top: {self.margin}px;
+                margin-right: {self.gap}px;
                 text-align: left;
+            }}
+            QPushButton:focus {{
+                outline: none;
             }}
             QPushButton:hover {{
                 color: {self.theme['colors'].get('black')};
