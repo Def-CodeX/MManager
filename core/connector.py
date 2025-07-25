@@ -5,6 +5,27 @@ from core.logger import Logger
 
 
 class Connector(qt.QObject):
+    """
+    proxies = {
+        "host": {
+            "socket": socket,
+            "listener_thread": Thread,
+            "running": bool,
+        }
+    }
+
+    "connections" = {
+        conn_id: {
+            "data": [
+                "messages"
+            ],
+            "host": ip,
+            "port": port,
+            "status": status,
+            "target": target_ip
+        },
+    }
+    """
     connected = qt.Signal(str)
     disconnected = qt.Signal(str)
     message_received = qt.Signal(str)
@@ -20,27 +41,12 @@ class Connector(qt.QObject):
         super().__init__()
         self.logger = Logger(name="connector", level="DEBUG").get_logger()
 
-        """
-        proxies = {
-            "host": {
-                "socket": socket,
-                "listener_thread": Thread,
-                "running": bool,
-                "connections": {
-                    conn_id: {
-                        "data": [
-                            "messages"
-                        ],
-                        "addr": (ip, port),
-                        "status": status,
-                        "target": target_ip
-                    },                    
-                }
-            }
-        }
-
-        """
         self.proxies = {}
+        self.connections = {}
+
+    def get_connection(self, conn_id: str) -> None | dict:
+        connection = self.connections.get(conn_id, None)
+        return connection
 
     def connect_proxy(self, proxy_host: str, proxy_port: int):
         if proxy_host in self.proxies.keys():
@@ -58,7 +64,7 @@ class Connector(qt.QObject):
             self.proxies[proxy_host] = {
                 "socket": conn,
                 "listener_thread": listener_thread,
-                "running": running
+                "running": running,
             }
 
             listener_thread.start()

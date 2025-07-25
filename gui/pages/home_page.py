@@ -63,7 +63,7 @@ class HomePage(qt.QWidget):
             self.setColumnWidth(3, 220)
             self.setEditTriggers(qt.QAbstractItemView.EditTrigger.NoEditTriggers)
 
-        def add_row(self, id_, host, port, status, remove_callback):
+        def add_row(self, id_, host, port, status, remove_callback, select_callback):
             for row in range(self.rowCount()):
                 if self.item(row, 0) and self.item(row, 0).text() == id_:
                     return
@@ -104,6 +104,7 @@ class HomePage(qt.QWidget):
                 height=25,
                 width=50
             )
+            btn_select.clicked.connect(lambda: select_callback(id_))
 
             layout.addWidget(btn_remove)
             layout.addWidget(btn_select)
@@ -127,11 +128,10 @@ class HomePage(qt.QWidget):
         if not self.objectName():
             self.setObjectName("HomePage")
 
-        self.connections: dict = {}
-
         # noinspection PyTypeChecker
         self.core: Func = self.window()
         self.connector = self.core.connector
+        self.commander = self.core.commander
 
         self.layout = qt.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -148,6 +148,7 @@ class HomePage(qt.QWidget):
 
         self.connector.connected.connect(self.on_proxy_connected)
         self.connector.disconnected.connect(self.on_proxy_disconnected)
+
         self.connector.connection_list.connect(self.on_connection_list)
         self.connector.port_added.connect(self.on_port_added)
         self.connector.port_removed.connect(self.on_port_removed)
@@ -175,6 +176,10 @@ class HomePage(qt.QWidget):
         self.frame_form.host_input.setCurrentIndex(-1)
         self.frame_form.port_input.clear()
 
+    @qt.Slot(str)
+    def select_connection(self, conn_id: str):
+        self.commander.select_conection(conn_id)
+
     @qt.Slot(str, str)
     def remove_connection(self, host, conn_id: str):
         self.connector.send_remove_port(host, conn_id)
@@ -182,13 +187,15 @@ class HomePage(qt.QWidget):
     @qt.Slot()
     def sync_connections(self):
         host = self.frame_form.host_input.currentText()
-        to_delete = [conn_id for conn_id, meta in self.connections.items() if meta["host"] == host]
+        to_delete = [conn_id for conn_id, meta in self.connector.connections.items() if meta["host"] == host]
 
         for conn_id in to_delete:
-            del self.connections[conn_id]
+            del self.connector.connections[conn_id]
 
         self.table_connections.remove_row(1, host)
         self.connector.send_list(host)
+
+        self.frame_form.host_input.setCurrentIndex(-1)
 
     @qt.Slot(str)
     def on_proxy_connected(self, host: str):
@@ -203,42 +210,43 @@ class HomePage(qt.QWidget):
 
     @qt.Slot(str, str, int, str)
     def on_port_added(self, conn_id: str, host: str, port: int, status: str):
-        self.connections[conn_id] = {
+        self.connector.connections[conn_id] = {
             "host": host,
             "port": port,
             "status": status,
             "target": "",
         }
-        self.table_connections.add_row(conn_id, host, port, status, self.remove_connection)
+        self.table_connections.add_row(conn_id, host, port, status, self.remove_connection, self.select_connection)
 
     @qt.Slot(str, str, int, str, str)
     def on_connection_list(self, conn_id: str, host: str, port: int, status: str, target: str):
-        self.connections[conn_id] = {
+        self.connector.connections[conn_id] = {
             "host": host,
             "port": port,
             "status": status,
             "target": target.replace('(', '').replace(')', ''),
         }
         new_status = f"{status} {target}".replace("()", "")
-        self.table_connections.add_row(conn_id, host, port, new_status, self.remove_connection)
+        self.table_connections.add_row(conn_id, host, port, new_status, self.remove_connection, self.select_connection)
 
     @qt.Slot(str)
     def on_port_removed(self, conn_id: str):
-        if conn_id in self.connections:
-            del self.connections[conn_id]
+        if conn_id in self.connector.connections:
+            del self.connector.connections[conn_id]
         self.table_connections.remove_row(0, conn_id)
 
     @qt.Slot(str, str, str)
     def on_target_connected(self, conn_id: str, ip: str, status: str):
         new_status = f"{status} ({ip})"
-        if conn_id in self.connections:
-            self.connections[conn_id]["status"] = status
-            self.connections[conn_id]["target"] = ip
+        if conn_id in self.connector.connections:
+            self.connector.connections[conn_id]["status"] = status
+            self.connector.connections[conn_id]["target"] = ip
             self.table_connections.update_row(conn_id, 3, new_status)
+            self.commander.connection_update.emit(conn_id)
 
     @qt.Slot(str, str)
     def on_target_disconnected(self, conn_id: str, status: str):
-        self.connections[conn_id]["status"] = status
-        self.connections[conn_id]["target"] = ""
+        self.connector.connections[conn_id]["status"] = status
+        self.connector.connections[conn_id]["target"] = ""
         self.table_connections.update_row(conn_id, 3, status)
-
+        self.commander.connection_update.emit(conn_id)

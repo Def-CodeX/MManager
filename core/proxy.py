@@ -30,7 +30,8 @@ class Proxy:
         self.logger.info(f"Proxy started on {self.ip}:{self.port}")
 
     def stop(self):
-        self.save_connections()
+        if self.connections:
+            self.save_connections()
         self.main_stop_event.set()
         try:
             if self.controller_conn:
@@ -272,7 +273,6 @@ class Proxy:
 
         elif command.startswith("LIST"):
             self.save_connections()
-            print(self.connections)
             for conn_id, meta in self.connections.items():
                 host = meta['addr'][0]
                 port = meta['addr'][1]
