@@ -4,10 +4,14 @@ import qt_core as qt
 import sys
 
 
-class MainWindow(qt.QMainWindow, Func):
-    def __init__(self):
+class MainWindow(qt.QMainWindow):
+    def __init__(self, core: Func):
         super().__init__()
 
+        self.logger = core.logger
+        self.proxy = core.proxy
+        self.connector = core.connector
+        self.commander = core.commander
         self.gui = CentralWidget(self)
 
     def closeEvent(self, event):
@@ -22,7 +26,8 @@ class MainWindow(qt.QMainWindow, Func):
 
 if __name__ == '__main__':
     app = qt.QApplication(sys.argv)
-    window = MainWindow()
+    func = Func()
+    window = MainWindow(func)
     window.show()
 
     sys.exit(app.exec())

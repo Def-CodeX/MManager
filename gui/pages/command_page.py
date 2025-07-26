@@ -1,4 +1,5 @@
 import qt_core as qt
+from gui.widgets.terminal import TerminalWidget
 
 
 class CommandPage(qt.QWidget):
@@ -16,7 +17,10 @@ class CommandPage(qt.QWidget):
         self.label = qt.QLabel("Command")
         self.label.setAlignment(qt.Qt.AlignmentFlag.AlignCenter)
 
-        self.add_widgets()
+        # self.terminal = TerminalWidget(theme, self)
 
-    def add_widgets(self):
+        self.add_layout()
+
+    def add_layout(self):
         self.layout.addWidget(self.label)
+        # self.layout.addWidget(self.terminal)
