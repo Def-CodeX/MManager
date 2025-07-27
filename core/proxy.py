@@ -137,10 +137,10 @@ class Proxy:
                         break
                     self._process_command(data.decode(errors='ignore'))
                 except Exception as e:
-                    self.logger.warning(e)
+                    self.logger.warning(f"Controller disconnected: {e}")
                     break
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error(f"Failed to accept controller: {e}")
             return
 
     def _send_to_controller(self, msg: str):

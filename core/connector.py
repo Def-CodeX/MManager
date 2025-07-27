@@ -1,7 +1,47 @@
 import qt_core as qt
 import socket
-import threading
 from core.logger import Logger
+
+
+class ProxyListener(qt.QObject):
+    def __init__(self, connector, proxy_host):
+        super().__init__()
+        self.connector = connector
+        self.proxy_host = proxy_host
+
+    @qt.Slot()
+    def listen_proxy(self):
+        proxy = self.connector.proxies.get(self.proxy_host)
+        if not proxy:
+            self.connector.logger.warning(f"Proxy on {self.proxy_host} not found")
+            return
+
+        try:
+            while proxy['running']:
+                data = proxy['socket'].recv(4096)
+                if not data:
+                    break
+                decoded = data.decode(errors="ignore").strip()
+                for line in decoded.splitlines():
+                    # noinspection PyTypeChecker
+                    qt.QMetaObject.invokeMethod(
+                        self.connector,
+                        "_parse_message",
+                        qt.Qt.ConnectionType.AutoConnection,
+                        qt.Q_ARG(str, line),
+                        qt.Q_ARG(str, self.proxy_host),
+                    )
+        except Exception as e:
+            self.connector.logger.error(f"Failed to listen proxy on {self.proxy_host}: {e}")
+        finally:
+            # noinspection PyTypeChecker
+            qt.QMetaObject.invokeMethod(
+                self.connector,
+                "disconnect_proxy",
+                qt.Qt.ConnectionType.AutoConnection,
+                qt.Q_ARG(str, self.proxy_host),
+                qt.Q_ARG(bool, False)
+            )
 
 
 class Connector(qt.QObject):
@@ -9,7 +49,8 @@ class Connector(qt.QObject):
     proxies = {
         "host": {
             "socket": socket,
-            "listener_thread": Thread,
+            "listener_thread": QThread,
+            "worker": ProxyListener,
             "running": bool,
         }
     }
@@ -57,13 +98,18 @@ class Connector(qt.QObject):
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             conn.connect((proxy_host, proxy_port))
 
-            listener_thread = threading.Thread(target=self._listen_proxy, args=(proxy_host,), daemon=True)
+            listener_thread = qt.QThread(self)
+            worker = ProxyListener(self, proxy_host)
+            worker.moveToThread(listener_thread)
+
+            listener_thread.started.connect(worker.listen_proxy)
 
             running = True
 
             self.proxies[proxy_host] = {
                 "socket": conn,
                 "listener_thread": listener_thread,
+                "worker": worker,
                 "running": running,
             }
 
@@ -85,7 +131,9 @@ class Connector(qt.QObject):
         try:
             proxy["socket"].close()
             if join:
-                proxy["listener_thread"].join()
+                proxy["listener_thread"].quit()
+                proxy["listener_thread"].wait()
+                proxy["worker"].deleteLater()
         except Exception as e:
             self.logger.error(f"Error to close proxy on {proxy_host}: {e}")
 
@@ -107,24 +155,38 @@ class Connector(qt.QObject):
             self.logger.error(f"Message to proxy on {proxy_host} failed: {e}")
             self.disconnected.emit()
 
-    def _listen_proxy(self, proxy_host):
-        proxy = self.proxies.get(proxy_host)
-        if not proxy:
-            self.logger.warning(f"Proxy on {proxy_host} not found")
-            return
+    def cleanup(self):
+        self.logger.info("Starting connector cleanup...")
+        proxy_hosts = list(self.proxies.keys())
 
-        try:
-            while proxy['running']:
-                data = proxy['socket'].recv(4096)
-                if not data:
-                    break
-                decoded = data.decode(errors="ignore").strip()
-                for line in decoded.splitlines():
-                    self._parse_message(line)
-        except Exception as e:
-            self.logger.error(f"Failed to listen proxy on {proxy_host}: {e}")
-        finally:
-            self.disconnect_proxy(proxy_host, join=False)
+        for proxy_host in proxy_hosts:
+            proxy = self.proxies.get(proxy_host)
+            if proxy:
+                proxy["running"] = False
+                try:
+                    proxy["socket"].close()
+                except Exception as e:
+                    self.logger.warning(f"Failed to close socket: {e}")
+
+        for proxy_host in proxy_hosts:
+            proxy = self.proxies.get(proxy_host)
+            if proxy:
+                self.logger.debug(f"Cleaning up proxy {proxy_host}")
+                try:
+                    proxy["listener_thread"].quit()
+                    if not proxy["listener_thread"].wait(2000):
+                        self.logger.warning(f"Force terminating thread for {proxy_host}")
+                        proxy["listener_thread"].terminate()
+                        proxy["listener_thread"].wait(1000)
+
+                    proxy["worker"].deleteLater()
+
+                except Exception as e:
+                    self.logger.error(f"Error cleaning proxy {proxy_host}: {e}")
+
+        self.proxies.clear()
+        self.connections.clear()
+        self.logger.info("Connector cleanup completed")
 
     # =============================
     # Commands wrappers
@@ -149,22 +211,35 @@ class Connector(qt.QObject):
     # Parser Proxy
     # =============================
 
-    def _parse_message(self, message: str):
-        self.logger.debug(f"Parsing message: {message}")
+    @qt.Slot(str, str)
+    def _parse_message(self, message: str, proxy_host: str):
+        self.logger.debug(f"Parsing message from [{proxy_host}]: {message}")
         if message.startswith("[PORT_ADDED]"):
-            _, conn_id, host, port, status = message.split()
+            parts = message.split()
+            if len(parts) != 5:
+                return
+            _, conn_id, host, port, status = parts
             self.port_added.emit(conn_id, host, int(port), status)
 
         elif message.startswith("[PORT_REMOVED]"):
-            _, conn_id = message.split()
+            parts = message.split()
+            if len(parts) != 2:
+                return
+            _, conn_id = parts
             self.port_removed.emit(conn_id)
 
         elif message.startswith("[TARGET_CONNECTED]"):
-            _, conn_id, ip, status = message.split()
+            parts = message.split()
+            if len(parts) != 4:
+                return
+            _, conn_id, ip, status = parts
             self.target_connected.emit(conn_id, ip, status)
 
         elif message.startswith("[TARGET_DISCONNECTED]"):
-            _, conn_id, status = message.split()
+            parts = message.split()
+            if len(parts) != 3:
+                return
+            _, conn_id, status = parts
             self.target_disconnected.emit(conn_id, status)
 
         elif message.startswith("[CONNECTION]"):
